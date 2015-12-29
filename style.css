@@ -24,4 +24,10 @@ canvas, form {
 form {
     display:inline-block;
     vertical-align: top;
+    margin-left:10px;
+}
+
+button {
+    margin-top:10px;
+    width:100%;
 }
