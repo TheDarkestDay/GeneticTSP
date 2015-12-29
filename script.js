@@ -9,6 +9,14 @@ window.onload = function() {
         cities = [],
         citiesSeq = 0;
     
+    var Population = function() {
+        this.species = [];
+    };
+    
+    Population.prototype.add = function(spec) {
+        this.species.push(spec);
+    };
+    
     canvas.addEventListener('click', function(evt) {
         var rect = canvas.getBoundingClientRect();
         citiesSeq++;
@@ -24,5 +32,24 @@ window.onload = function() {
     
     runBtn.addEventListener('click', function(evt) {
         evt.preventDefault();
+        
+        var initPopCount = parseInt(populationSizeField.value),
+            randIndex,
+            tempCities,
+            tempRoute,
+            pop = new Population();
+        
+        for (var i=0;i<initPopCount;i++) {
+            tempCities = Object.assign([],cities);
+            tempRoute = [];
+            while (tempCities.length) {
+                randIndex = Math.floor(Math.random()*tempCities.length);
+                tempRoute.push(tempCities[randIndex]);
+                tempCities = tempCities.slice(randIndex,1);
+            };
+            pop.add(tempRoute);
+        };
+        
+        console.log(pop);
     });
 };
