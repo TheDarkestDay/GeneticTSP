@@ -8,6 +8,7 @@ window.onload = function() {
         ctx = canvas.getContext('2d'),
         cities = [],
         pop,
+        tournamentSize = 5,
         citiesSeq = 0;
     
     var Population = function() {
@@ -16,6 +17,14 @@ window.onload = function() {
     
     Population.prototype.add = function(spec) {
         this.species.push(Object.assign([],spec));
+    };
+    
+    Population.prototype.size = function() {
+        return this.species.length;
+    };
+    
+    Population.prototype.get = function(index) {
+        return this.species[index];
     };
     
     canvas.addEventListener('click', function(evt) {
@@ -51,14 +60,56 @@ window.onload = function() {
         };
     };
     
+    function evolve(population) {
+        
+    };
+    
+    function tournamentSelection(population) {
+        var tournament = new Population(),
+            randIndex;
+        
+        for (var i=0;i<tournamentSize;i++) {
+            randIndex = Math.floor(Math.random()*population.size());
+            tournament.add(Population.get(randIndex));
+        };
+        
+        return findFittestFrom(tournament);
+    };
+    
+    function findFittestFrom(population) {
+        var currBest = getFitness(population.get(0)),
+            bestIndex = 0;
+        
+        for (var i=0;i<population.size();i++) {
+            if (getFitness(population.get(i)) > currBest) {
+                currBest = getFintess(population.get(i));
+                bestIndex = i;
+            };
+        };
+    };
+    
+    function getFitness(route) {
+        return 1/getDistanceOf(route);
+    };
+    
+    function getDistanceOf(route) {
+        
+    };
+    
+    function crossOver() {
+        
+    };
+    
     runBtn.addEventListener('click', function(evt) {
         evt.preventDefault();
+        
+        var generationsCount = parseInt(generationsCountField.value);
         
         generateFirstPopulation();
         console.log(pop);
         
-        /*for (var i=0;i<generationsCount;i++) {
-            evolve(pop);
-        };*/
+        for (var i=0;i<generationsCount;i++) {
+            pop = evolve(pop);
+        };
     });
 };
