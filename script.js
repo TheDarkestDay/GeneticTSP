@@ -7,6 +7,7 @@ window.onload = function() {
         canvas = document.getElementById('canvas'),
         ctx = canvas.getContext('2d'),
         cities = [],
+        pop,
         citiesSeq = 0;
     
     var Population = function() {
@@ -14,7 +15,7 @@ window.onload = function() {
     };
     
     Population.prototype.add = function(spec) {
-        this.species.push(spec);
+        this.species.push(Object.assign([],spec));
     };
     
     canvas.addEventListener('click', function(evt) {
@@ -30,14 +31,13 @@ window.onload = function() {
         ctx.stroke();
     });
     
-    runBtn.addEventListener('click', function(evt) {
-        evt.preventDefault();
-        
+    function generateFirstPopulation() {
         var initPopCount = parseInt(populationSizeField.value),
-            randIndex,
             tempCities,
             tempRoute,
-            pop = new Population();
+            randIndex;
+        
+        pop = new Population();
         
         for (var i=0;i<initPopCount;i++) {
             tempCities = Object.assign([],cities);
@@ -45,11 +45,20 @@ window.onload = function() {
             while (tempCities.length) {
                 randIndex = Math.floor(Math.random()*tempCities.length);
                 tempRoute.push(tempCities[randIndex]);
-                tempCities = tempCities.slice(randIndex,1);
+                tempCities.splice(randIndex,1);
             };
             pop.add(tempRoute);
         };
+    };
+    
+    runBtn.addEventListener('click', function(evt) {
+        evt.preventDefault();
         
+        generateFirstPopulation();
         console.log(pop);
+        
+        /*for (var i=0;i<generationsCount;i++) {
+            evolve(pop);
+        };*/
     });
 };
