@@ -93,7 +93,13 @@ window.onload = function() {
     };
     
     function getDistanceOf(route) {
+        var result = 0;
         
+        for (var i=0;i<route.length-1;i++) {
+            result += Math.sqrt(Math.pow(route[i+1].x-route[i].x,2)+Math.pow(route[i+1].y-route[i].y,2));
+        };
+        
+        return result;
     };
     
     function crossOver() {
