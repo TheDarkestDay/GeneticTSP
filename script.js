@@ -11,6 +11,7 @@ window.onload = function() {
         pop,
         tournamentSize = 5,
         elitismOffset = 0,
+        mutationRate,
         citiesSeq = 0;
     
     var Population = function() {
@@ -70,7 +71,12 @@ window.onload = function() {
         var result = new Population(),
             dad,
             mom,
-            newRoute;
+            newRoute,
+            mutateRoll = Math.random();
+        
+        if (elitismOffset) {
+            result.add(findFittestFrom(population));
+        };
         
         for (var i=elitismOffset;i<population.size();i++) {
             dad = tournamentSelection(population);
@@ -78,7 +84,10 @@ window.onload = function() {
             
             newRoute = crossOver(dad,mom);
             
-            newRoute = mutate(newRoute);
+            if (mutateRoll < mutationRate) {
+                mutate(newRoute);
+            };
+            
             result.add(newRoute);
         };
         
@@ -95,7 +104,7 @@ window.onload = function() {
             while (usedIndicies.indexOf(randIndex) != -1) {
                 randIndex = Math.floor(Math.random()*population.size());
             };
-            tournament.add(Population.get(randIndex));
+            tournament.add(population.get(randIndex));
             usedIndicies.push(randIndex);
         };
         
@@ -108,7 +117,7 @@ window.onload = function() {
         
         for (var i=0;i<population.size();i++) {
             if (getFitness(population.get(i)) > currBest) {
-                currBest = getFintess(population.get(i));
+                currBest = getFitness(population.get(i));
                 bestIndex = i;
             };
         };
@@ -134,7 +143,7 @@ window.onload = function() {
         var startPos = Math.floor(Math.random()*dad.length),
             endPos = Math.floor(Math.random()*dad.length),
             tempPos,
-            child;
+            child = [];
         
         for (var i=0;i<dad.length;i++) {
             child.push(0);
@@ -169,7 +178,17 @@ window.onload = function() {
     };
     
     function mutate(route) {
+        var first = Math.floor(Math.random()*route.length),
+            second = Math.floor(Math.random()*route.length),
+            tempCity;
         
+        while (first == second) {
+            second = Math.floor(Math.random()*route.length);
+        };
+        
+        tempCity = route[second];
+        route[second] = route[first];
+        route[first] = tempCity;
     };
     
     runBtn.addEventListener('click', function(evt) {
@@ -178,6 +197,8 @@ window.onload = function() {
         if (elitismCheckbox.getAttribute('checked')) {
             elitismOffset = 1;
         };
+        
+        mutationRate = parseInt(mutationRateField.value)/100;
         
         var generationsCount = parseInt(generationsCountField.value);
         
