@@ -4,6 +4,7 @@ window.onload = function() {
         generationsCountField = document.getElementById('generationsCount'),
         mutationRateField = document.getElementById('mutationRate'),
         populationSizeField = document.getElementById('populationSize'),
+        log = document.getElementById('log'),
         canvas = document.getElementById('canvas'),
         ctx = canvas.getContext('2d'),
         elitismCheckbox = document.getElementById('elitismCheckbox'),
@@ -11,8 +12,7 @@ window.onload = function() {
         pop,
         tournamentSize = 5,
         elitismOffset = 0,
-        mutationRate,
-        citiesSeq = 0;
+        mutationRate;
     
     var Population = function() {
         this.species = [];
@@ -36,9 +36,7 @@ window.onload = function() {
     
     canvas.addEventListener('click', function(evt) {
         var rect = canvas.getBoundingClientRect();
-        citiesSeq++;
         cities.push({
-            id: citiesSeq,
             x: evt.clientX - rect.left,
             y: evt.clientY - rect.top
         });
@@ -72,7 +70,7 @@ window.onload = function() {
             dad,
             mom,
             newRoute,
-            mutateRoll = Math.random();
+            mutateRoll;
         
         if (elitismOffset) {
             result.add(findFittestFrom(population));
@@ -84,8 +82,10 @@ window.onload = function() {
             
             newRoute = crossOver(dad,mom);
             
+            mutateRoll = Math.random();
             if (mutateRoll < mutationRate) {
                 mutate(newRoute);
+                console.log('Mutation happens');
             };
             
             result.add(newRoute);
@@ -134,6 +134,9 @@ window.onload = function() {
         
         for (var i=0;i<route.length-1;i++) {
             result += Math.sqrt(Math.pow(route[i+1].x-route[i].x,2)+Math.pow(route[i+1].y-route[i].y,2));
+            if (i == route.length-2) {
+                result += Math.sqrt(Math.pow(route[0].x-route[i+1].x,2)+Math.pow(route[0].y-route[i+1].y,2));
+            };
         };
         
         return result;
@@ -192,7 +195,11 @@ window.onload = function() {
     };
     
     runBtn.addEventListener('click', function(evt) {
+        var optimalPath,
+            paragraph;
         evt.preventDefault();
+        
+        init();
         
         if (elitismCheckbox.getAttribute('checked')) {
             elitismOffset = 1;
@@ -204,10 +211,40 @@ window.onload = function() {
         
         generateFirstPopulation();
         
+        console.log(getFitness(findFittestFrom(pop)));
+        
         for (var i=0;i<generationsCount;i++) {
             pop = evolve(pop);
+            paragraph = document.createElement('p');
+            paragraph.innerHTML = 'Generation №'+(i+1)+': '+'<br />'+getFitness(findFittestFrom(pop));
+            log.appendChild(paragraph);
         };
         
         console.log(pop);
+        optimalPath = findFittestFrom(pop);
+        
+        drawPath(optimalPath);
     });
+    
+    function drawPath(path) {
+        ctx.beginPath();
+        for (var i=0;i<path.length-1;i++) {
+            ctx.moveTo(path[i].x,path[i].y);
+            ctx.lineTo(path[i+1].x,path[i+1].y);
+            if (i==path.length-2) {
+                ctx.moveTo(path[i+1].x,path[i+1].y);
+                ctx.lineTo(path[0].x,path[0].y);
+            };
+        };
+        ctx.stroke();
+    };
+    
+    function init() {
+        ctx.clearRect(0,0,500,500);
+        for (var i=0;i<cities.length;i++) {
+            ctx.beginPath();
+            ctx.arc(cities[i].x,cities[i].y,10,0,2*Math.PI,false);
+            ctx.stroke();
+        };
+    };
 };
