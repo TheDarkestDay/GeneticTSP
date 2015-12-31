@@ -6,9 +6,11 @@ window.onload = function() {
         populationSizeField = document.getElementById('populationSize'),
         canvas = document.getElementById('canvas'),
         ctx = canvas.getContext('2d'),
+        elitismCheckbox = document.getElementById('elitismCheckbox'),
         cities = [],
         pop,
         tournamentSize = 5,
+        elitismOffset = 0,
         citiesSeq = 0;
     
     var Population = function() {
@@ -25,6 +27,10 @@ window.onload = function() {
     
     Population.prototype.get = function(index) {
         return this.species[index];
+    };
+    
+    Population.prototype.all = function() {
+        return this.species;
     };
     
     canvas.addEventListener('click', function(evt) {
@@ -61,16 +67,36 @@ window.onload = function() {
     };
     
     function evolve(population) {
+        var result = new Population(),
+            dad,
+            mom,
+            newRoute;
         
+        for (var i=elitismOffset;i<population.size();i++) {
+            dad = tournamentSelection(population);
+            mom = tournamentSelection(population);
+            
+            newRoute = crossOver(dad,mom);
+            
+            newRoute = mutate(newRoute);
+            result.add(newRoute);
+        };
+        
+        return result;
     };
     
     function tournamentSelection(population) {
         var tournament = new Population(),
-            randIndex;
+            randIndex,
+            usedIndicies = [];
         
         for (var i=0;i<tournamentSize;i++) {
             randIndex = Math.floor(Math.random()*population.size());
+            while (usedIndicies.indexOf(randIndex) != -1) {
+                randIndex = Math.floor(Math.random()*population.size());
+            };
             tournament.add(Population.get(randIndex));
+            usedIndicies.push(randIndex);
         };
         
         return findFittestFrom(tournament);
@@ -86,6 +112,8 @@ window.onload = function() {
                 bestIndex = i;
             };
         };
+        
+        return population.get(bestIndex);
     };
     
     function getFitness(route) {
@@ -102,20 +130,63 @@ window.onload = function() {
         return result;
     };
     
-    function crossOver() {
+    function crossOver(dad,mom) {
+        var startPos = Math.floor(Math.random()*dad.length),
+            endPos = Math.floor(Math.random()*dad.length),
+            tempPos,
+            child;
+        
+        for (var i=0;i<dad.length;i++) {
+            child.push(0);
+        }
+        
+        while (startPos == endPos) {
+            endPos = Math.floor(Math.random()*dad.length);
+        };
+        
+        if (startPos > endPos) {
+            tempPos = endPos;
+            endPos = startPos;
+            startPos = tempPos;
+        };
+        
+        for (var i=startPos;i<endPos;i++) {
+            child[i] = dad[i];
+        };
+        
+        for (var i=0;i<mom.length;i++) {
+            var j;
+            if (child.indexOf(mom[i]) == -1) {
+                j = 0;
+                while (child[j] != 0) {
+                    j++;
+                };
+                child[j] = mom[i];
+            };
+        };
+        
+        return child;
+    };
+    
+    function mutate(route) {
         
     };
     
     runBtn.addEventListener('click', function(evt) {
         evt.preventDefault();
         
+        if (elitismCheckbox.getAttribute('checked')) {
+            elitismOffset = 1;
+        };
+        
         var generationsCount = parseInt(generationsCountField.value);
         
         generateFirstPopulation();
-        console.log(pop);
         
         for (var i=0;i<generationsCount;i++) {
             pop = evolve(pop);
         };
+        
+        console.log(pop);
     });
 };
