@@ -1,22 +1,105 @@
-window.onload = function() {
+var app = require('express')();
+var http = require('http').Server(app);
+var express = require('express');
+var io = require('socket.io')(http);
+
+var cities = [],
+    initPopulationSize,
+    tournamentSize = 5,
+    elitismOffset = 0,
+    mutationRate,
+    pop,
+    limit = 0;
     
-    var runBtn = document.getElementById('run'),
-        resumeBtn = document.getElementById('resume'),
-        stopCriteriaField = document.getElementById('generationsCount'),
-        mutationRateField = document.getElementById('mutationRate'),
-        populationSizeField = document.getElementById('populationSize'),
-        log = document.getElementById('log'),
-        canvas = document.getElementById('canvas'),
-        ctx = canvas.getContext('2d'),
-        elitismCheckbox = document.getElementById('elitismCheckbox'),
-        socket = io(),
-        cities = [],
-        pop,
-        tournamentSize = 5,
-        elitismOffset = 0,
-        mutationRate;
-    
-  /*  var Population = function() {
+
+app.use(express.static('./'));
+
+app.get('/', function(req, res){
+  res.sendFile(__dirname + '/index.html');
+});
+
+http.listen(3000, function(){
+  console.log('listening on *:3000');
+});
+
+io.on('connection', function(socket){
+  socket.on('start', function(settings) {
+      cities = settings.cities;
+      initPopulationSize = settings.popCount;
+      elitismOffset = settings.elitism;
+      mutationRate = settings.mutationRate;
+      limit = settings.limit;
+      
+      console.log('started');
+      
+      var i = 0,
+          prevFitnessValue = 0,
+          generationsCount = 0;
+      
+      
+      generateFirstPopulation();
+      
+      while (i<limit) {
+          pop = evolve(pop);
+          if ( prevFitnessValue != getFitness(findFittestFrom(pop)) ) {
+              i = 0;
+              prevFitnessValue = getFitness(findFittestFrom(pop));
+          } else {
+              i++;
+          }
+          generationsCount++;
+          if (generationsCount % 10 == 0) {
+              io.emit('draw path', {route: findFittestFrom(pop)});
+          }
+      }
+      
+  });
+      
+  socket.on('resume', function(settings) {
+      limit = settings.limit;
+      
+      var i = 0,
+          prevFitnessValue = 0,
+          generationsCount = 0;
+      
+      while (i<limit) {
+          pop = evolve(pop);
+          if ( prevFitnessValue != getFitness(findFittestFrom(pop)) ) {
+              i = 0;
+              prevFitnessValue = getFitness(findFittestFrom(pop));
+          } else {
+              i++;
+          }
+          generationsCount++;
+          if (generationsCount % 10 == 0) {
+              io.emit('draw path', {route: findFittestFrom(pop)});
+          }
+      }
+      
+  }); 
+});
+
+function generateFirstPopulation() {
+        var initPopCount = initPopulationSize,
+            tempCities,
+            tempRoute,
+            randIndex;
+        
+        pop = new Population();
+        
+        for (var i=0;i<initPopCount;i++) {
+            tempCities = Object.assign([],cities);
+            tempRoute = [];
+            while (tempCities.length) {
+                randIndex = Math.floor(Math.random()*tempCities.length);
+                tempRoute.push(tempCities[randIndex]);
+                tempCities.splice(randIndex,1);
+            };
+            pop.add(tempRoute);
+        };
+    };
+
+var Population = function() {
         this.species = [];
     };
     
@@ -34,40 +117,10 @@ window.onload = function() {
     
     Population.prototype.all = function() {
         return this.species;
-    }; */
-    
-    canvas.addEventListener('click', function(evt) {
-        var rect = canvas.getBoundingClientRect();
-        cities.push({
-            x: evt.clientX - rect.left,
-            y: evt.clientY - rect.top
-        });
-        ctx.beginPath();
-        ctx.arc(cities[cities.length-1].x,cities[cities.length-1].y,10,0,2*Math.PI,false);
-        ctx.stroke();
-    });
-    
- /*   function generateFirstPopulation() {
-        var initPopCount = parseInt(populationSizeField.value),
-            tempCities,
-            tempRoute,
-            randIndex;
-        
-        pop = new Population();
-        
-        for (var i=0;i<initPopCount;i++) {
-            tempCities = Object.assign([],cities);
-            tempRoute = [];
-            while (tempCities.length) {
-                randIndex = Math.floor(Math.random()*tempCities.length);
-                tempRoute.push(tempCities[randIndex]);
-                tempCities.splice(randIndex,1);
-            };
-            pop.add(tempRoute);
-        };
-    }; 
-     
-    function evolve(population) {
+    };
+
+
+function evolve(population) {
         var result = new Population(),
             dad,
             mom,
@@ -87,7 +140,6 @@ window.onload = function() {
             mutateRoll = Math.random();
             if (mutateRoll < mutationRate) {
                 mutate(newRoute);
-                console.log('Mutation happens');
             };
             
             result.add(newRoute);
@@ -95,8 +147,9 @@ window.onload = function() {
         
         return result;
     };
-    
-    function tournamentSelection(population) {
+
+
+function tournamentSelection(population) {
         var tournament = new Population(),
             randIndex,
             usedIndicies = [];
@@ -125,9 +178,10 @@ window.onload = function() {
         };
         
         return population.get(bestIndex);
-    };  
-    
-    function getFitness(route) {
+    };
+
+
+  function getFitness(route) {
         return 1/getDistanceOf(route);
     };
     
@@ -194,74 +248,4 @@ window.onload = function() {
         tempCity = route[second];
         route[second] = route[first];
         route[first] = tempCity;
-    }; */
-    
-    runBtn.addEventListener('click', function(evt) {
-        var optimalPath,
-            paragraph;
-        evt.preventDefault();
-        
-        
-        
-        if (elitismCheckbox.getAttribute('checked')) {
-            elitismOffset = 1;
-        };
-        
-        mutationRate = parseInt(mutationRateField.value)/100;
-        
-        socket.emit('start', {
-            mutationRate: mutationRate, 
-            elitism: elitismOffset, 
-            popCount: parseInt(populationSizeField.value),
-            cities: cities,
-            limit: parseInt(stopCriteriaField.value)
-        });
-        
-        
-    resumeBtn.addEventListener('click', function(evt) {
-        socket.emit('resume', { limit: parseInt(stopCriteriaField.value) });
-    });  
-        
-        
-    /*    generateFirstPopulation();
-        
-        
-        for (var i=0;i<generationsCount;i++) {
-            pop = evolve(pop);
-        //   paragraph = document.createElement('p');
-         //   paragraph.innerHTML = 'Generation №'+(i+1)+': '+'<br />'+getFitness(findFittestFrom(pop));
-        };
-        
-        optimalPath = findFittestFrom(pop);
-        
-        drawPath(optimalPath); */
-    });
-    
-    socket.on('draw path', function(settings) {
-        init();
-        drawPath(settings.route);
-    });
-    
-    
-    function drawPath(path) {
-        ctx.beginPath();
-        for (var i=0;i<path.length-1;i++) {
-            ctx.moveTo(path[i].x,path[i].y);
-            ctx.lineTo(path[i+1].x,path[i+1].y);
-            if (i==path.length-2) {
-                ctx.moveTo(path[i+1].x,path[i+1].y);
-                ctx.lineTo(path[0].x,path[0].y);
-            };
-        };
-        ctx.stroke();
     };
-    
-    function init() {
-        ctx.clearRect(0,0,500,500);
-        for (var i=0;i<cities.length;i++) {
-            ctx.beginPath();
-            ctx.arc(cities[i].x,cities[i].y,10,0,2*Math.PI,false);
-            ctx.stroke();
-        };
-    };
-};

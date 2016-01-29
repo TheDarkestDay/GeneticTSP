@@ -23,7 +23,7 @@
             </div>
             <div class="widget">
                 <label for="generationsCount">
-                    Generations count
+                    Waiting for new value limit:
                 </label>
                 <input type="number" id="generationsCount">
             </div>
@@ -36,9 +36,14 @@
             <button id="run">
                 Run
             </button>
+            <button id="resume">
+                Resume
+            </button>
             <div id="log">
             </div>
         </form>
+        <script src="node_modules/socket.io/node_modules/socket.io-client/socket.io.js">
+        </script>
         <script src="script.js">
         </script>
     </body>

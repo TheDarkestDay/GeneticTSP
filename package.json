@@ -1,0 +1,23 @@
+{
+  "name": "genetics",
+  "version": "1.0.0",
+  "description": "Genetics algorithm for TSP",
+  "main": "script.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TheDarkestDay/GeneticTSP.git"
+  },
+  "author": "Alexander Brenchev",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/TheDarkestDay/GeneticTSP/issues"
+  },
+  "homepage": "https://github.com/TheDarkestDay/GeneticTSP#readme",
+  "dependencies": {
+    "express": "^4.10.2",
+    "socket.io": "^1.4.5"
+  }
+}
