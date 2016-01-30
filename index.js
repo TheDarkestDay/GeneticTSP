@@ -3,12 +3,15 @@ var http = require('http').Server(app);
 var express = require('express');
 var io = require('socket.io')(http);
 
+
+
 var cities = [],
     initPopulationSize,
     tournamentSize = 5,
     elitismOffset = 0,
     mutationRate,
     pop,
+    prevFitnessValue = 0,
     limit = 0;
     
 
@@ -33,11 +36,11 @@ io.on('connection', function(socket){
       console.log('started');
       
       var i = 0,
-          prevFitnessValue = 0,
           generationsCount = 0;
       
       
       generateFirstPopulation();
+      io.emit('start');
       
       while (i<limit) {
           pop = evolve(pop);
@@ -48,22 +51,23 @@ io.on('connection', function(socket){
               i++;
           }
           generationsCount++;
-          if (generationsCount % 10 == 0) {
-              io.emit('draw path', {route: findFittestFrom(pop)});
-          }
+          io.emit('draw path', {route: findFittestFrom(pop)});
       }
       
+      io.emit('finish');
   });
       
   socket.on('resume', function(settings) {
       limit = settings.limit;
+      console.log('resumed');
       
       var i = 0,
-          prevFitnessValue = 0,
           generationsCount = 0;
+      io.emit('start');
       
       while (i<limit) {
           pop = evolve(pop);
+          console.log('evolved');
           if ( prevFitnessValue != getFitness(findFittestFrom(pop)) ) {
               i = 0;
               prevFitnessValue = getFitness(findFittestFrom(pop));
@@ -71,11 +75,11 @@ io.on('connection', function(socket){
               i++;
           }
           generationsCount++;
-          if (generationsCount % 10 == 0) {
-              io.emit('draw path', {route: findFittestFrom(pop)});
-          }
+          io.emit('draw path', {route: findFittestFrom(pop)});
       }
+      console.log(generationsCount);
       
+      io.emit('finish');
   }); 
 });
 
@@ -249,3 +253,16 @@ function tournamentSelection(population) {
         route[second] = route[first];
         route[first] = tempCity;
     };
+
+
+
+
+var assert = require('assert');
+describe('Array', function() {
+  describe('#indexOf()', function () {
+    it('should return -1 when the value is not present', function () {
+      assert.equal(-1, [1,2,3].indexOf(5));
+      assert.equal(-1, [1,2,3].indexOf(0));
+    });
+  });
+});

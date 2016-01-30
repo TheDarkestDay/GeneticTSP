@@ -219,6 +219,7 @@ window.onload = function() {
         
         
     resumeBtn.addEventListener('click', function(evt) {
+        evt.preventDefault();
         socket.emit('resume', { limit: parseInt(stopCriteriaField.value) });
     });  
         
@@ -240,6 +241,14 @@ window.onload = function() {
     socket.on('draw path', function(settings) {
         init();
         drawPath(settings.route);
+    });
+    
+    socket.on('start', function() {
+        document.getElementById('status').className = 'playing';
+    });
+    
+    socket.on('finish', function() {
+        document.getElementById('status').className = 'stopped';
     });
     
     
